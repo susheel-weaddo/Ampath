@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, FlatList, Platform, StatusBar as RNStatusBar, Image, Animated, Modal, Pressable } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -19,6 +19,7 @@ import FIGMA_INSTAGRAM from '../../assets/figma/instagram.svg';
 import FIGMA_FACEBOOK from '../../assets/figma/facebook.svg';
 import FIGMA_YOUTUBE from '../../assets/figma/youtube.svg';
 import FIGMA_LINKEDIN from '../../assets/figma/linkedin.svg';
+import { BLOGS as SHARED_BLOGS } from '../../constants/blogs';
 
 const { width: SW } = Dimensions.get('window');
 const finalWidth = SW - containerSpace * 2;
@@ -47,6 +48,7 @@ const FIGMA_HWC_4 = require('../../assets/figma/hoc4.png');
 const FIGMA_HWC_5 = require('../../assets/figma/hoc5.png');
 const FIGMA_HWC_6 = require('../../assets/figma/hoc6.png');
 const FIGMA_VECTOR_B = require('../../assets/figma/vector-b.png');
+const FIGMA_PROMO_AD = require('../../assets/figma/ad.jpg');
 
 const SLIDES = [
   { id: '1', source: FIGMA_SLIDE, title: 'Book Lab Tests at Home', desc: "Safe & Convenient sample collection by trained experts at your doorstep" },
@@ -108,10 +110,12 @@ const REVIEWS = [
   },
 ];
 
-const BLOGS = [
-  { id: 'b1', title: 'Medicine Research', img: FIGMA_BLOG_1, desc: 'Lorem ipsum dolor sit amet consectetur.' },
-  { id: 'b2', title: 'Healthy Living', img: FIGMA_BLOG_1, desc: 'Lorem ipsum dolor sit amet consectetur.' },
-];
+const BLOGS = SHARED_BLOGS.slice(0, 2).map((blog) => ({
+  id: blog.id,
+  title: blog.title,
+  img: blog.image,
+  desc: blog.description,
+}));
 
 const VIDEOS = [
   { id: 'v1', title: 'Medicine Research', desc: 'Understand how diagnostics improve preventive care and faster treatment decisions.', image: FIGMA_VIDEO_1, duration: '03:12', url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ' },
@@ -189,8 +193,10 @@ export default function HomeScreen({ navigation }: any) {
   const [cartCount, setCartCount] = useState(0);
   const [mostBookedTabsWidth, setMostBookedTabsWidth] = useState(0);
   const [activeVideo, setActiveVideo] = useState<(typeof VIDEOS)[number] | null>(null);
+  const [isPromoVisible, setPromoVisible] = useState(true);
   const sliderRef = useRef<FlatList>(null);
   const mostBookedThumbX = useRef(new Animated.Value(0)).current;
+  const promoTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const addToCart = () => setCartCount((p) => p + 1);
   const activeLabPackageItems = useMemo(() => {
@@ -208,10 +214,38 @@ export default function HomeScreen({ navigation }: any) {
     }).start();
   }, [mostBookedActiveIndex, mostBookedTabWidth, mostBookedThumbX]);
 
+  useEffect(() => {
+    if (!isPromoVisible) return;
+
+    promoTimeoutRef.current = setTimeout(() => {
+      setPromoVisible(false);
+    }, 500);
+
+    return () => {
+      if (promoTimeoutRef.current) {
+        clearTimeout(promoTimeoutRef.current);
+        promoTimeoutRef.current = null;
+      }
+    };
+  }, [isPromoVisible]);
+
   const playActiveVideo = async () => {
     if (!activeVideo) return;
     await Linking.openURL(activeVideo.url);
   };
+
+  const closePromo = useCallback(() => {
+    if (promoTimeoutRef.current) {
+      clearTimeout(promoTimeoutRef.current);
+      promoTimeoutRef.current = null;
+    }
+    setPromoVisible(false);
+  }, []);
+
+  const handlePromoPress = useCallback(() => {
+    closePromo();
+    navigation.navigate('BookSlot');
+  }, [closePromo, navigation]);
 
   return (
     <AppScreenWrapper>
@@ -610,7 +644,7 @@ export default function HomeScreen({ navigation }: any) {
           <View style={s.appContainer}>
             <View style={s.sectionRow}>
               <Text style={s.sectionTitle}>Blogs</Text>
-              <TouchableOpacity activeOpacity={0.85}>
+              <TouchableOpacity activeOpacity={0.85} onPress={() => navigation.navigate('AllBlog')}>
                 <Text style={s.seeAll}>See all</Text>
               </TouchableOpacity>
             </View>
@@ -618,7 +652,7 @@ export default function HomeScreen({ navigation }: any) {
           <View style={{ paddingLeft: containerSpace }}>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, marginTop: 18, paddingRight: containerSpace }}>
               {BLOGS.map((b) => (
-                <View key={b.id} style={s.blogCard}>
+                <TouchableOpacity key={b.id} style={s.blogCard} activeOpacity={0.92} onPress={() => navigation.navigate('BlogDetail', { blogId: b.id })}>
                   <View style={s.blogImgWrap}>
                     <Image source={b.img} style={s.blogImg} resizeMode="cover" />
                   </View>
@@ -626,10 +660,10 @@ export default function HomeScreen({ navigation }: any) {
                     <Text style={s.blogTitle} numberOfLines={1} ellipsizeMode="tail">{b.title}</Text>
                     <Text style={s.blogDesc} numberOfLines={1} ellipsizeMode="tail">{b.desc}</Text>
                   </View>
-                  <TouchableOpacity style={s.blogBtn} activeOpacity={0.85}>
+                  <TouchableOpacity style={s.blogBtn} activeOpacity={0.85} onPress={() => navigation.navigate('BlogDetail', { blogId: b.id })}>
                     <Text style={s.blogBtnTxt}>Read More</Text>
                   </TouchableOpacity>
-                </View>
+                </TouchableOpacity>
               ))}
             </ScrollView>
           </View>
@@ -702,6 +736,19 @@ export default function HomeScreen({ navigation }: any) {
       <TouchableOpacity style={s.chatFab} activeOpacity={0.85} onPress={() => navigation.navigate('ContactUs')}>
         <ChatbotIcon width={"100%"} height={"100%"} />
       </TouchableOpacity>
+
+      <Modal visible={isPromoVisible} transparent animationType="fade" onRequestClose={closePromo}>
+        <Pressable style={s.promoBackdrop} onPress={closePromo}>
+          <Pressable style={s.promoShell} onPress={(event) => event.stopPropagation()}>
+            <TouchableOpacity style={s.promoCard} activeOpacity={0.96} onPress={handlePromoPress}>
+              <Image source={FIGMA_PROMO_AD} style={s.promoImage} resizeMode="cover" />
+            </TouchableOpacity>
+            <TouchableOpacity style={s.promoCloseBtn} activeOpacity={0.85} onPress={closePromo}>
+              <Ionicons name="close" size={18} color={Colors.white} />
+            </TouchableOpacity>
+          </Pressable>
+        </Pressable>
+      </Modal>
 
       <Modal visible={!!activeVideo} transparent animationType="fade" onRequestClose={() => setActiveVideo(null)}>
         <Pressable style={s.videoModalBackdrop} onPress={() => setActiveVideo(null)}>
@@ -863,6 +910,11 @@ const s = StyleSheet.create({
   videoDuration: { position: 'absolute', right: 10, bottom: 10, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 999, backgroundColor: 'rgba(0,0,0,0.58)' },
   videoDurationTxt: { fontFamily: FontFamily.medium, fontSize: 10, color: Colors.white },
   playWrap: { width: 34, height: 34, borderRadius: 17, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center', position: 'absolute' },
+  promoBackdrop: { flex: 1, backgroundColor: 'rgba(8, 17, 30, 0.52)', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 18 },
+  promoShell: { width: '100%', maxWidth: 360, position: 'relative' },
+  promoCard: { width: '100%', borderRadius: 18, overflow: 'hidden', backgroundColor: Colors.white, ...Shadow.lg, justifyContent: 'center' },
+  promoImage: { width: '100%', minWidth: '100%', aspectRatio: 500 / 627, backgroundColor: '#D9ECFF' },
+  promoCloseBtn: { position: 'absolute', top: 12, right: 12, width: 30, height: 30, borderRadius: 15, backgroundColor: 'rgba(26, 54, 93, 0.58)', alignItems: 'center', justifyContent: 'center' },
   videoModalBackdrop: { flex: 1, backgroundColor: 'rgba(8, 17, 30, 0.72)', alignItems: 'center', justifyContent: 'center', padding: 24 },
   videoModalCard: { width: '100%', maxWidth: 360, borderRadius: 24, backgroundColor: Colors.white, overflow: 'hidden' },
   videoModalImageWrap: { aspectRatio: 16 / 9, backgroundColor: '#D9ECFF', position: 'relative' },

@@ -19,6 +19,8 @@ import LanguageSettingsScreen from '../screens/main/LanguageSettingsScreen';
 import AppearanceScreen from '../screens/main/AppearanceScreen';
 import GetHelpScreen from '../screens/main/GetHelpScreen';
 import GuideToAmpathScreen from '../screens/main/GuideToAmpathScreen';
+import AllBlogScreen from '../screens/main/AllBlogScreen';
+import BlogDetailScreen from '../screens/main/BlogDetailScreen';
 import SetReminderScreen from '../screens/main/SetReminderScreen';
 import AccountSecurityScreen from '../screens/main/AccountSecurityScreen';
 import ContactUsScreen from '../screens/main/ContactUsScreen';
@@ -62,6 +64,8 @@ export default function MainStack() {
         <Stack.Screen name="Appearance" component={AppearanceScreen} />
         <Stack.Screen name="GetHelp" component={GetHelpScreen} />
         <Stack.Screen name="GuideToAmpath" component={GuideToAmpathScreen} />
+        <Stack.Screen name="AllBlog" component={AllBlogScreen} />
+        <Stack.Screen name="BlogDetail" component={BlogDetailScreen} />
         <Stack.Screen name="ContactUs" component={ContactUsScreen} />
         <Stack.Screen name="Terms" component={TermsScreen} />
         <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />

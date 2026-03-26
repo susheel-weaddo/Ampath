@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform, StatusBar as RNStatusBar, Image } from 'react-native';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform, StatusBar as RNStatusBar, Image, Animated, Easing, LayoutAnimation, UIManager } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, FontFamily, Shadow, Typography } from '../../theme';
@@ -21,6 +21,7 @@ type HistoryItem = {
 
 export default function OrderDetailUpcomingScreen({ navigation }: any) {
   const [openId, setOpenId] = useState<string | null>('h1');
+  const progressAnim = useRef(new Animated.Value(0)).current;
   const history: HistoryItem[] = useMemo(() => ([
     { id: 'h1', title: 'Report Ready', status: 'pending', time: '08:30am | Tomorrow', showChevron: true },
     { id: 'h2', title: 'In Lab', status: 'done', time: '08:30pm | Today', showChevron: true },
@@ -29,6 +30,33 @@ export default function OrderDetailUpcomingScreen({ navigation }: any) {
     { id: 'h5', title: 'Collector Assigned', status: 'done', person: 'Amit Sharma', timeLabel: 'Reach at', time: '05:30pm | Today' },
     { id: 'h6', title: 'Test Booked', status: 'done', helper: 'Full Body Check-up', showChevron: true },
   ]), []);
+  const completedIndex = useMemo(() => {
+    let lastDoneIndex = -1;
+    history.forEach((item, index) => {
+      if (item.status === 'done') lastDoneIndex = index;
+    });
+    return lastDoneIndex;
+  }, [history]);
+
+  useEffect(() => {
+    if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+      UIManager.setLayoutAnimationEnabledExperimental(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    Animated.timing(progressAnim, {
+      toValue: completedIndex >= 0 ? completedIndex + 1 : 0,
+      duration: 450,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: false,
+    }).start();
+  }, [completedIndex, progressAnim]);
+
+  const toggleAccordion = (id: string) => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setOpenId((prev) => (prev === id ? null : id));
+  };
 
   return (
     <View style={s.container}>
@@ -105,16 +133,32 @@ export default function OrderDetailUpcomingScreen({ navigation }: any) {
         <View style={{ gap: 12, marginTop: 23 }}>
           <Text style={s.sectionTitle}>History</Text>
 
-          <View style={{ paddingLeft: 18, position: "relative"}}>
-            <View style={s.timelineLine} />
-            <View style={s.historyList}>
-              {history.map((h) => {
+          <View style={s.historyWrap}>
+            <View>
+              {history.map((h, index) => {
                 const isCollapsible = !!h.showChevron;
                 const isOpen = isCollapsible ? openId === h.id : true;
                 const dotStyle = h.status === 'pending' ? s.dotPending : s.dotDone;
+                const isBeforeCompleted = completedIndex >= 0 && index < completedIndex;
+                const isCurrentCompleted = index === completedIndex;
+                const lineFillHeight = progressAnim.interpolate({
+                  inputRange: [index, index + 1],
+                  outputRange: ['0%', '100%'],
+                  extrapolate: 'clamp',
+                });
                 return (
                   <View key={h.id} style={s.historyRow}>
-                    <View style={s.dotWrap}>
+                    <View style={s.railWrap}>
+                      {index < history.length - 1 ? (
+                        <View style={s.railTrack}>
+                          <Animated.View
+                            style={[
+                              s.railFill,
+                              { height: isBeforeCompleted ? '100%' : isCurrentCompleted ? lineFillHeight : '0%' },
+                            ]}
+                          />
+                        </View>
+                      ) : null}
                       <View style={[s.dot, dotStyle]} />
                     </View>
                     <Card style={s.histCard}>
@@ -122,7 +166,7 @@ export default function OrderDetailUpcomingScreen({ navigation }: any) {
                         <TouchableOpacity
                           style={s.histHeader}
                           activeOpacity={0.85}
-                          onPress={() => setOpenId((prev) => (prev === h.id ? null : h.id))}
+                          onPress={() => toggleAccordion(h.id)}
                         >
                           <Text style={s.histTitle}>{h.title}</Text>
                           <Ionicons name={isOpen ? 'chevron-up' : 'chevron-down'} size={18} color={Colors.greyNormal} />
@@ -184,10 +228,11 @@ const s = StyleSheet.create({
   blockValue: { fontFamily: FontFamily.regular, fontSize: 14, color: '#666' },
   paid: { fontFamily: FontFamily.medium, fontSize: 12, color: '#21AC61' },
   sectionTitle: { fontFamily: FontFamily.medium, fontSize: 16, color: Colors.greyText },
-  timelineLine: { position: 'absolute', left: 9.9, top: 14, bottom: 55, width: 2, backgroundColor: '#D8E0EA' },
-  historyList: { gap: 12, marginLeft: -16 },
-  historyRow: { flexDirection: 'row', gap: 12, alignItems: 'flex-start' },
-  dotWrap: { width: 18, alignItems: 'center', paddingTop: 14 },
+  historyWrap: { paddingLeft: 2 },
+  historyRow: { flexDirection: 'row', gap: 12, alignItems: 'stretch', paddingBottom: 12 },
+  railWrap: { width: 18, alignItems: 'center', position: 'relative', paddingTop: 24 },
+  railTrack: { position: 'absolute', top: 24, bottom: -40, width: 2, backgroundColor: '#D8E0EA', borderRadius: 999, overflow: 'hidden' },
+  railFill: { position: 'absolute', top: 0, left: 0, right: 0, backgroundColor: Colors.primaryDark, borderRadius: 999 },
   dot: { width: 10, height: 10, borderRadius: 5 },
   dotPending: { backgroundColor: Colors.white, borderWidth: 2, borderColor: Colors.primaryDark },
   dotDone: { backgroundColor: '#34C759' },

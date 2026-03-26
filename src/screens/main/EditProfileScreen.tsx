@@ -51,7 +51,7 @@ export default function EditProfileScreen({ navigation }: any) {
       <View style={s.avatarWrap}>
         <Image source={AVATAR_ABHINAV} style={s.avatar} />
         <View style={s.avatarEdit}>
-          <IconEditSquare width={18} height={18} color={Colors.white} />
+          <IconEditSquare width={24} height={24} color={Colors.white} />
         </View>
       </View>
 
@@ -72,9 +72,9 @@ export default function EditProfileScreen({ navigation }: any) {
 
 const s = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.white },
-  avatarWrap: { alignItems: 'center', marginTop: 18, marginBottom: 20 },
-  avatar: { width: 104, height: 104, borderRadius: 52, backgroundColor: '#F4F4F5' },
-  avatarEdit: { position: 'absolute', right: 0, bottom: 0, width: 24, height: 24, borderRadius: 12, backgroundColor: Colors.primaryDark, alignItems: 'center', justifyContent: 'center' },
+  avatarWrap: { width: 104, height: 104, alignItems: 'center', position: 'relative', marginHorizontal: 'auto', marginBottom: 30},
+  avatar: {  borderRadius: "50%", backgroundColor: '#F4F4F5',  },
+  avatarEdit: { position: 'absolute', right: -5, bottom: -5,backgroundColor: Colors.white, borderRadius: 16, },
   form: { paddingHorizontal: 16, gap: 18, paddingBottom: 120 },
   label: { fontFamily: FontFamily.medium, fontSize: 12, color: Colors.greyText },
   inputWrap: { borderWidth: 1, borderColor: '#E6E6E6', borderRadius: 16, paddingHorizontal: 20, paddingVertical: 16, backgroundColor: Colors.white },

@@ -42,7 +42,7 @@ export default function GuideToAmpathScreen({ navigation }: any) {
               <TouchableOpacity activeOpacity={0.7} onPress={() => setOpenKey((prev) => (prev === item.key ? '' : item.key))} style={s.row}>
                 <Text style={[s.rowTitle, isOpen && { color: Colors.primaryDark, fontFamily: FontFamily.medium }]}>{item.title}</Text>
                 <View style={{ transform: [{ rotate: isOpen ? '90deg' : '0deg' }] }}>
-                  <ChevronRight width={20} height={20} color={Colors.primaryDark} />
+                  <ChevronRight width={18} height={18} color={Colors.primaryDark} preserveAspectRatio="xMidYMid meet" />
                 </View>
               </TouchableOpacity>
 
@@ -59,7 +59,7 @@ export default function GuideToAmpathScreen({ navigation }: any) {
 const s = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.white },
   content: { paddingTop: 28, paddingHorizontal: 17, paddingBottom: 120 },
-  row: { height: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  row: { height: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 10 },
   rowTitle: { fontFamily: FontFamily.regular, fontSize: 14, color: '#595959' },
   body: { marginTop: 10, fontFamily: FontFamily.regular, fontSize: 12, color: '#737373', lineHeight: 14.4 },
   hr: { marginTop: 12, height: 1, backgroundColor: '#D4D4D8' },

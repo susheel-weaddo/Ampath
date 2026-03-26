@@ -27,7 +27,7 @@ export default function GetHelpScreen({ navigation }: any) {
           <View key={item.key} style={s.rowWrap}>
             <TouchableOpacity activeOpacity={0.7} onPress={() => item.onPress(navigation)} style={s.row}>
               <Text style={s.rowText}>{item.label}</Text>
-              <ChevronRight width={20} height={20} color={Colors.primaryDark} />
+              <ChevronRight width={18} height={18} color={Colors.primary} preserveAspectRatio="xMidYMid meet" />
             </TouchableOpacity>
             <View style={s.hr} />
           </View>
@@ -40,7 +40,7 @@ export default function GetHelpScreen({ navigation }: any) {
 const s = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.white },
   content: { paddingTop: 28, paddingHorizontal: 17, paddingBottom: 120 },
-  rowWrap: { gap: 12 },
+  rowWrap: { gap: 12, marginBottom: 16 },
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   rowText: { fontFamily: FontFamily.regular, fontSize: 14, color: '#595959' },
   hr: { height: 1, backgroundColor: '#D4D4D8' },

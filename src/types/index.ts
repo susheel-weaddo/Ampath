@@ -120,7 +120,13 @@ export type MainStackParams = {
   OrderHistory: undefined;
   PaymentsInvoices: undefined;
   HelpFAQ: undefined;
+  GetHelp: undefined;
+  GuideToAmpath: undefined;
+  SetReminder: undefined;
+  AccountSecurity: undefined;
   ContactUs: undefined;
+  AllBlog: undefined;
+  BlogDetail: { blogId: string };
   Terms: undefined;
   PrivacyPolicy: undefined;
   TestList: undefined;
