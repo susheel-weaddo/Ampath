@@ -113,6 +113,8 @@ export type MainStackParams = {
   BookTest: undefined;
   Notifications: undefined;
   LabLocator: undefined;
+  OurCenters: undefined;
+  OurCentersList: { state?: string; city?: string } | undefined;
   TrackOrder: undefined;
   EditProfile: undefined;
   FamilyMembers: undefined;

@@ -22,7 +22,6 @@ export default function SplashScreen({ navigation }: any) {
   return (
     <View style={s.container}>
       <StatusBar style="dark" />
-      <DecorativeEllipses />
       <Animated.View style={{ opacity, transform: [{ scale }] }}>
         <Image
           source={FIGMA_SPLASH_LOGO}
@@ -36,6 +35,6 @@ export default function SplashScreen({ navigation }: any) {
 }
 
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.white, justifyContent: 'center', alignItems: 'center' },
+  container: { flex: 1, backgroundColor: Colors.white, justifyContent: 'center', alignItems: 'center', position: 'relative' },
   logo: { width: 223, height: 50.44 },
 });

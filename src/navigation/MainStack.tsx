@@ -37,6 +37,8 @@ import OrderDetailCompletedScreen from '../screens/main/OrderDetailCompletedScre
 import ViewReportScreen from '../screens/main/ViewReportScreen';
 import WriteReviewScreen from '../screens/main/WriteReviewScreen';
 import TestDetailScreen from '../screens/main/TestDetailScreen';
+import OurCentersScreen from '../screens/main/OurCentersScreen';
+import OurCentersListScreen from '../screens/main/OurCentersListScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -49,6 +51,8 @@ export default function MainStack() {
         <Stack.Screen name="BookTest" component={BookTestScreen} />
         <Stack.Screen name="Notifications" component={NotificationsScreen} />
         <Stack.Screen name="LabLocator" component={LabLocatorScreen} />
+        <Stack.Screen name="OurCenters" component={OurCentersScreen} />
+        <Stack.Screen name="OurCentersList" component={OurCentersListScreen} />
         <Stack.Screen name="TrackOrder" component={TrackOrderScreen} />
         <Stack.Screen name="EditProfile" component={EditProfileScreen} />
         <Stack.Screen name="FamilyMembers" component={FamilyMembersScreen} />

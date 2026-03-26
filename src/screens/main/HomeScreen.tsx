@@ -472,20 +472,20 @@ export default function HomeScreen({ navigation }: any) {
 
         {/* Special Offers */}
         <View style={{ marginTop: 30, paddingHorizontal: 16 }}>
-          <View style={s.offer}>
+          <TouchableOpacity activeOpacity={0.92} style={s.offer} onPress={() => navigation.navigate('OurCenters')}>
             <View style={{ gap: 14, flex: 1, paddingHorizontal: 10, paddingVertical: 15, paddingRight: 0 }}>
               <View style={{ gap: 5,}}>
                 <Text style={s.offerSmall}>21% off on your First Test</Text>
                 <Text style={s.offerBig}>Safe & Convenient sample collection by trained experts at your doorstep</Text>
               </View>
-              <TouchableOpacity style={s.offerBtn} activeOpacity={0.85} onPress={() => navigation.navigate('TestList')}>
+              <View style={s.offerBtn}>
                 <Text style={s.offerBtnTxt}>Book now</Text>
-              </TouchableOpacity>
+              </View>
             </View>
             <View style={s.offerImg}>
               <Image source={FIGMA_OFFER_DOCTOR} style={s.offerImgInner} resizeMode="cover" />
             </View>
-          </View>
+          </TouchableOpacity>
         </View>
 
         {/* Most Booked */}
