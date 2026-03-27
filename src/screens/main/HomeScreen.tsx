@@ -21,7 +21,9 @@ import FIGMA_FACEBOOK from '../../assets/figma/facebook.svg';
 import FIGMA_YOUTUBE from '../../assets/figma/youtube.svg';
 import FIGMA_LINKEDIN from '../../assets/figma/linkedin.svg';
 import { DEFAULT_BLOG_CITY, getBlogs } from '../../api/blogApi';
+import { getTestimonials } from '../../api/testimonialsApi';
 import type { Blog } from '../../types/blog';
+import type { Testimonial } from '../../api/testimonialsApi';
 
 const { width: SW } = Dimensions.get('window');
 const finalWidth = SW - containerSpace * 2;
@@ -112,6 +114,8 @@ const REVIEWS = [
     avatar: FIGMA_AVATAR,
   },
 ];
+
+const DEFAULT_CITY = 'Hyderabad';
 
 const VIDEOS = [
   {
@@ -208,6 +212,8 @@ export default function HomeScreen({ navigation }: any) {
   const [isPromoVisible, setPromoVisible] = useState(true);
   const [homeBlogs, setHomeBlogs] = useState<Blog[]>([]);
   const [homeBlogsLoading, setHomeBlogsLoading] = useState(true);
+  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
+  const [testimonialsLoading, setTestimonialsLoading] = useState(true);
   const sliderRef = useRef<FlatList>(null);
   const mostBookedThumbX = useRef(new Animated.Value(0)).current;
   const promoTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -248,7 +254,25 @@ export default function HomeScreen({ navigation }: any) {
       }
     };
 
+    const loadTestimonials = async () => {
+      try {
+        const items = await getTestimonials(DEFAULT_CITY);
+        if (mounted) {
+          setTestimonials(items);
+        }
+      } catch {
+        if (mounted) {
+          setTestimonials(REVIEWS as any);
+        }
+      } finally {
+        if (mounted) {
+          setTestimonialsLoading(false);
+        }
+      }
+    };
+
     void loadHomeBlogs();
+    void loadTestimonials();
 
     return () => {
       mounted = false;
@@ -671,33 +695,47 @@ export default function HomeScreen({ navigation }: any) {
             </View>
           </View>
           <View style={{paddingLeft: containerSpace}}>
-            <HorizontalSlider
-              data={REVIEWS}
-              itemWidth={SW * 0.72}
-              keyExtractor={(item) => item.id}
-              showPagination
-              contentContainerStyle={{ gap: 14, marginTop: 20 }}
-              paginationContainerStyle={s.reviewDots}
-              dotStyle={s.reviewDot}
-              activeDotStyle={s.reviewDotActive}
-              renderItem={(item) => (
-                <Card style={s.reviewCard}>
-                  <Image source={FIGMA_VECTOR_B} style={s.reviewBg} resizeMode="contain" />
-                  <Text style={s.reviewText}>{item.quote}</Text>
-                  <View style={s.reviewFooter}>
-                    <Image source={item.avatar} style={s.reviewAvatar} />
-                    <View style={{ flex: 1, gap: 5, alignItems: 'flex-start' }}>
-                      <View style={s.reviewRatingRow}>
-                        <Ionicons name="star" size={12} color="#F5B100" />
-                        <Text style={s.reviewRating}>{item.rating.toFixed(1)}</Text>
+            {testimonialsLoading ? (
+              <View style={[s.reviewCard, { marginTop: 20, marginRight: containerSpace }]}>
+                <Text style={s.reviewText}>Loading testimonials...</Text>
+              </View>
+            ) : testimonials.length === 0 ? (
+              <View style={[s.reviewCard, { marginTop: 20, marginRight: containerSpace }]}>
+                <Text style={s.reviewText}>No testimonials available.</Text>
+              </View>
+            ) : (
+              <HorizontalSlider
+                data={testimonials}
+                itemWidth={SW * 0.72}
+                keyExtractor={(item) => item.id}
+                showPagination
+                contentContainerStyle={{ gap: 14, marginTop: 20 }}
+                paginationContainerStyle={s.reviewDots}
+                dotStyle={s.reviewDot}
+                activeDotStyle={s.reviewDotActive}
+                renderItem={(item) => (
+                  <Card style={s.reviewCard}>
+                    <Image source={FIGMA_VECTOR_B} style={s.reviewBg} resizeMode="contain" />
+                    <Text style={s.reviewText}>{item.quote}</Text>
+                    <View style={s.reviewFooter}>
+                      {item.imageurl ? (
+                        <Image source={{ uri: item.imageurl }} style={s.reviewAvatar} />
+                      ) : (
+                        <Image source={FIGMA_AVATAR} style={s.reviewAvatar} />
+                      )}
+                      <View style={{ flex: 1, gap: 5, alignItems: 'flex-start' }}>
+                        <View style={s.reviewRatingRow}>
+                          <Ionicons name="star" size={12} color="#F5B100" />
+                          <Text style={s.reviewRating}>{item.rating.toFixed(1)}</Text>
+                        </View>
+                        <Text style={s.reviewBy}>{item.name}</Text>
+                        <Text style={s.reviewMeta}>{item.designation}</Text>
                       </View>
-                      <Text style={s.reviewBy}>{item.name}</Text>
-                      <Text style={s.reviewMeta}>{item.meta}</Text>
                     </View>
-                  </View>
-                </Card>
-              )}
-            />
+                  </Card>
+                )}
+              />
+            )}
           </View>
         </View>
 
@@ -968,7 +1006,7 @@ const s = StyleSheet.create({
   wcImg: { height: "100%", width: "100%" },
   wcName: { fontFamily: FontFamily.medium, fontSize: 11, color: Colors.greyDark, textAlign: 'center' },
   wcPrice: { fontFamily: FontFamily.semiBold, fontSize: 12, color: Colors.primaryDark },
-  reviewCard: { borderRadius: 20, backgroundColor: Colors.white, paddingVertical: 18, paddingHorizontal: 16, gap: 12, minHeight: 186, overflow: 'hidden' },
+  reviewCard: { borderRadius: 20, backgroundColor: Colors.white, paddingVertical: 18, paddingHorizontal: 16, gap: 12, minHeight: 262, overflow: 'hidden' },
   reviewBg: { position: 'absolute', top: 10, left: 10, width: '25%', aspectRatio: 69/49},
   reviewText: { ...Typography.body2, color: Colors.greyNormal, lineHeight: 18 },
   reviewFooter: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 'auto' },
