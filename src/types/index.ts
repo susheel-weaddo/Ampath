@@ -118,6 +118,7 @@ export type MainStackParams = {
   TrackOrder: undefined;
   EditProfile: undefined;
   FamilyMembers: undefined;
+  AddMember: undefined;
   SavedAddresses: undefined;
   OrderHistory: undefined;
   PaymentsInvoices: undefined;
@@ -127,9 +128,12 @@ export type MainStackParams = {
   SetReminder: undefined;
   FranchiseEnquiry: undefined;
   AccountSecurity: undefined;
+  PaymentSettings: undefined;
+  LanguageSettings: undefined;
+  Appearance: undefined;
   ContactUs: undefined;
   AllBlog: undefined;
-  BlogDetail: { blogId: string };
+  BlogDetail: { blogId: string | number };
   Terms: undefined;
   PrivacyPolicy: undefined;
   TestList: undefined;
@@ -140,6 +144,9 @@ export type MainStackParams = {
   BookingDetail: undefined;
   ViewReport: undefined;
   WriteReview: undefined;
+  OrderDetailUpcoming: undefined;
+  OrderDetailCompleted: undefined;
+  BookingSuccess: undefined;
 };
 
 export type RootStackParams = {

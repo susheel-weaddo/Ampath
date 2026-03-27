@@ -264,7 +264,7 @@ const s = StyleSheet.create({
     backgroundColor: "#EBF3FA",
     paddingHorizontal: containerSpace,
     paddingTop: 25,
-    paddingBottom: 75,
+    paddingBottom: 125,
   },
   formTitle: {
     fontFamily: FontFamily.semiBold,

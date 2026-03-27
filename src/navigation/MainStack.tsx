@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import type { MainStackParams } from '../types';
 import MainTabs from './MainTabs';
 import ReportDetailScreen from '../screens/main/ReportDetailScreen';
 import BookTestScreen from '../screens/main/BookTestScreen';
@@ -41,7 +42,7 @@ import TestDetailScreen from '../screens/main/TestDetailScreen';
 import OurCentersScreen from '../screens/main/OurCentersScreen';
 import OurCentersListScreen from '../screens/main/OurCentersListScreen';
 
-const Stack = createNativeStackNavigator();
+const Stack = createNativeStackNavigator<MainStackParams>();
 
 export default function MainStack() {
   return (

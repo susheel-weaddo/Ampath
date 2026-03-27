@@ -4,6 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Linking from 'expo-linking';
 import { Ionicons } from '@expo/vector-icons';
+import { useVideoPlayer, VideoView } from 'expo-video';
 import { Colors, FontFamily, FontSize, Spacing, BorderRadius, Shadow, Typography, containerSpace } from '../../theme';
 import { AppScreenWrapper, HorizontalSlider, Card, Badge } from '../../components';
 import IconLocation from '../../assets/icons/icon-location.svg';
@@ -19,7 +20,8 @@ import FIGMA_INSTAGRAM from '../../assets/figma/instagram.svg';
 import FIGMA_FACEBOOK from '../../assets/figma/facebook.svg';
 import FIGMA_YOUTUBE from '../../assets/figma/youtube.svg';
 import FIGMA_LINKEDIN from '../../assets/figma/linkedin.svg';
-import { BLOGS as SHARED_BLOGS } from '../../constants/blogs';
+import { DEFAULT_BLOG_CITY, getBlogs } from '../../api/blogApi';
+import type { Blog } from '../../types/blog';
 
 const { width: SW } = Dimensions.get('window');
 const finalWidth = SW - containerSpace * 2;
@@ -40,6 +42,7 @@ const FIGMA_WOMEN_4 = require('../../assets/figma/img4.png');
 
 const FIGMA_BLOG_1 = require('../../assets/figma/blog1.png');
 const FIGMA_VIDEO_1 = require('../../assets/figma/blog1.png');
+const FIGMA_VIDEO_MP4 = require('../../assets/figma/videoplayback.mp4');
 
 const FIGMA_HWC_1 = require('../../assets/figma/hoc1.png');
 const FIGMA_HWC_2 = require('../../assets/figma/hoc2.png');
@@ -110,16 +113,25 @@ const REVIEWS = [
   },
 ];
 
-const BLOGS = SHARED_BLOGS.slice(0, 2).map((blog) => ({
-  id: blog.id,
-  title: blog.title,
-  img: blog.image,
-  desc: blog.description,
-}));
-
 const VIDEOS = [
-  { id: 'v1', title: 'Medicine Research', desc: 'Understand how diagnostics improve preventive care and faster treatment decisions.', image: FIGMA_VIDEO_1, duration: '03:12', url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ' },
-  { id: 'v2', title: 'Nutrition Basics', desc: 'Simple nutrition habits that support energy, immunity and better daily health.', image: FIGMA_BLOG_1, duration: '02:48', url: 'https://www.youtube.com/watch?v=ysz5S6PUM-U' },
+  {
+    id: 'v1',
+    title: 'Medicine Research',
+    desc: 'Understand how diagnostics improve preventive care and faster treatment decisions.',
+    image: FIGMA_VIDEO_1,
+    duration: '03:12',
+    source: FIGMA_VIDEO_MP4,
+    fallbackUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+  },
+  {
+    id: 'v2',
+    title: 'Nutrition Basics',
+    desc: 'Simple nutrition habits that support energy, immunity and better daily health.',
+    image: FIGMA_BLOG_1,
+    duration: '02:48',
+    source: FIGMA_VIDEO_MP4,
+    fallbackUrl: 'https://www.youtube.com/watch?v=ysz5S6PUM-U',
+  },
 ];
 
 const WHY_CHOOSE_ITEMS = [
@@ -194,6 +206,8 @@ export default function HomeScreen({ navigation }: any) {
   const [mostBookedTabsWidth, setMostBookedTabsWidth] = useState(0);
   const [activeVideo, setActiveVideo] = useState<(typeof VIDEOS)[number] | null>(null);
   const [isPromoVisible, setPromoVisible] = useState(true);
+  const [homeBlogs, setHomeBlogs] = useState<Blog[]>([]);
+  const [homeBlogsLoading, setHomeBlogsLoading] = useState(true);
   const sliderRef = useRef<FlatList>(null);
   const mostBookedThumbX = useRef(new Animated.Value(0)).current;
   const promoTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -215,6 +229,33 @@ export default function HomeScreen({ navigation }: any) {
   }, [mostBookedActiveIndex, mostBookedTabWidth, mostBookedThumbX]);
 
   useEffect(() => {
+    let mounted = true;
+
+    const loadHomeBlogs = async () => {
+      try {
+        const items = await getBlogs(DEFAULT_BLOG_CITY);
+        if (mounted) {
+          setHomeBlogs(items.slice(0, 2));
+        }
+      } catch {
+        if (mounted) {
+          setHomeBlogs([]);
+        }
+      } finally {
+        if (mounted) {
+          setHomeBlogsLoading(false);
+        }
+      }
+    };
+
+    void loadHomeBlogs();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
     if (!isPromoVisible) return;
 
     promoTimeoutRef.current = setTimeout(() => {
@@ -229,10 +270,29 @@ export default function HomeScreen({ navigation }: any) {
     };
   }, [isPromoVisible]);
 
-  const playActiveVideo = async () => {
-    if (!activeVideo) return;
-    await Linking.openURL(activeVideo.url);
-  };
+  const videoPlayer = useVideoPlayer(activeVideo?.source ?? null, (player) => {
+    player.loop = false;
+  });
+
+  useEffect(() => {
+    if (!activeVideo) {
+      videoPlayer.pause();
+      return;
+    }
+
+    videoPlayer.currentTime = 0;
+    videoPlayer.play();
+  }, [activeVideo, videoPlayer]);
+
+  const closeActiveVideo = useCallback(() => {
+    videoPlayer.pause();
+    setActiveVideo(null);
+  }, [videoPlayer]);
+
+  const openActiveVideoFallback = useCallback(async () => {
+    if (!activeVideo?.fallbackUrl) return;
+    await Linking.openURL(activeVideo.fallbackUrl);
+  }, [activeVideo]);
 
   const closePromo = useCallback(() => {
     if (promoTimeoutRef.current) {
@@ -653,20 +713,34 @@ export default function HomeScreen({ navigation }: any) {
           </View>
           <View style={{ paddingLeft: containerSpace }}>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, marginTop: 18, paddingRight: containerSpace }}>
-              {BLOGS.map((b) => (
-                <TouchableOpacity key={b.id} style={s.blogCard} activeOpacity={0.92} onPress={() => navigation.navigate('BlogDetail', { blogId: b.id })}>
-                  <View style={s.blogImgWrap}>
-                    <Image source={b.img} style={s.blogImg} resizeMode="cover" />
-                  </View>
-                  <View style={{gap: 4}}> 
-                    <Text style={s.blogTitle} numberOfLines={1} ellipsizeMode="tail">{b.title}</Text>
-                    <Text style={s.blogDesc} numberOfLines={1} ellipsizeMode="tail">{b.desc}</Text>
-                  </View>
-                  <TouchableOpacity style={s.blogBtn} activeOpacity={0.85} onPress={() => navigation.navigate('BlogDetail', { blogId: b.id })}>
-                    <Text style={s.blogBtnTxt}>Read More</Text>
+              {homeBlogsLoading ? (
+                <View style={[s.blogCard, s.blogStateCard]}>
+                  <Text style={s.blogDesc}>Loading blogs...</Text>
+                </View>
+              ) : homeBlogs.length === 0 ? (
+                <View style={[s.blogCard, s.blogStateCard]}>
+                  <Text style={s.blogDesc}>No blogs available right now.</Text>
+                </View>
+              ) : (
+                homeBlogs.map((blog) => (
+                  <TouchableOpacity key={blog.id} style={s.blogCard} activeOpacity={0.92} onPress={() => navigation.navigate('BlogDetail', { blogId: blog.id })}>
+                    <View style={s.blogImgWrap}>
+                      {blog.imageUrl ? (
+                        <Image source={{ uri: blog.imageUrl }} style={s.blogImg} resizeMode="cover" />
+                      ) : (
+                        <View style={s.blogImg} />
+                      )}
+                    </View>
+                    <View style={{gap: 4}}>
+                      <Text style={s.blogTitle} numberOfLines={2} ellipsizeMode="tail">{blog.title}</Text>
+                      <Text style={s.blogDesc} numberOfLines={2} ellipsizeMode="tail">{blog.excerpt}</Text>
+                    </View>
+                    <TouchableOpacity style={s.blogBtn} activeOpacity={0.85} onPress={() => navigation.navigate('BlogDetail', { blogId: blog.id })}>
+                      <Text style={s.blogBtnTxt}>Read More</Text>
+                    </TouchableOpacity>
                   </TouchableOpacity>
-                </TouchableOpacity>
-              ))}
+                ))
+              )}
             </ScrollView>
           </View>
         </View>
@@ -752,31 +826,39 @@ export default function HomeScreen({ navigation }: any) {
         </Pressable>
       </Modal>
 
-      <Modal visible={!!activeVideo} transparent animationType="fade" onRequestClose={() => setActiveVideo(null)}>
-        <Pressable style={s.videoModalBackdrop} onPress={() => setActiveVideo(null)}>
+      <Modal visible={!!activeVideo} transparent animationType="fade" onRequestClose={closeActiveVideo}>
+        <Pressable style={s.videoModalBackdrop} onPress={closeActiveVideo}>
           <Pressable style={s.videoModalCard} onPress={(event) => event.stopPropagation()}>
             {activeVideo ? (
               <>
-                <View style={s.videoModalImageWrap}>
-                  <Image source={activeVideo.image} style={s.videoModalImage} resizeMode="cover" />
-                  <View style={s.videoModalOverlay} />
-                  <TouchableOpacity style={s.videoModalPlay} activeOpacity={0.9} onPress={playActiveVideo}>
-                    <Ionicons name="play" size={22} color={Colors.white} />
+                <View style={s.videoModalHeader}>
+                  <Text style={s.videoModalHeaderTitle}></Text>
+                  <TouchableOpacity style={s.videoModalCloseBtn} activeOpacity={0.85} onPress={closeActiveVideo}>
+                    <Ionicons name="close" size={20} color={Colors.white} />
                   </TouchableOpacity>
                 </View>
-                <View style={s.videoModalBody}>
-                  <Text style={s.videoModalTitle}>{activeVideo.title}</Text>
-                  <Text style={s.videoModalDesc}>{activeVideo.desc}</Text>
-                  <Text style={s.videoModalMeta}>Dummy preview only. Tap play to open the sample video link.</Text>
-                  <View style={s.videoModalActions}>
-                    <TouchableOpacity style={s.videoModalPrimaryBtn} activeOpacity={0.9} onPress={playActiveVideo}>
-                      <Text style={s.videoModalPrimaryTxt}>Play video</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={s.videoModalGhostBtn} activeOpacity={0.9} onPress={() => setActiveVideo(null)}>
-                      <Text style={s.videoModalGhostTxt}>Close</Text>
-                    </TouchableOpacity>
-                  </View>
+                <View style={s.videoFrame}>
+                  <VideoView
+                    player={videoPlayer}
+                    style={s.videoPlayer}
+                    nativeControls
+                    contentFit="cover"
+                    allowsFullscreen
+                  />
                 </View>
+                {activeVideo.fallbackUrl ? (
+                  <TouchableOpacity style={s.videoFallbackBtn} activeOpacity={0.88} onPress={openActiveVideoFallback}>
+                    <Ionicons name="logo-youtube" size={16} color={Colors.white} />
+                    <Text style={s.videoFallbackTxt}>Open YouTube link</Text>
+                  </TouchableOpacity>
+                ) : null}
+                {/* <View style={s.videoCaptionRow}>
+                  <Text style={s.videoCaption} numberOfLines={1}>
+                    {activeVideo.title}
+                  </Text>
+                  <Text style={s.videoCaptionMeta}>{activeVideo.duration}</Text>
+                </View>
+                <View style={s.videoSafeSpace} /> */}
               </>
             ) : null}
           </Pressable>
@@ -899,6 +981,7 @@ const s = StyleSheet.create({
   reviewDot: { width: 8, height: 8, borderRadius: 999, backgroundColor: '#C8D1DD', marginHorizontal: 3 },
   reviewDotActive: { width: 16, backgroundColor: Colors.primary },
   blogCard: { width: 253, borderRadius: 10, backgroundColor: '#E9EFF6', padding: 11, gap: 10 },
+  blogStateCard: { minHeight: 160, justifyContent: 'center' },
   blogImgWrap: { width: "100%", aspectRatio: 233/93, borderRadius: 10, backgroundColor: '#D9ECFF' },
   blogImg: { height: 93, borderRadius: 10, backgroundColor: '#D9ECFF' },
   blogTitle: { fontFamily: FontFamily.semiBold, fontSize: 14, color: Colors.black },
@@ -917,21 +1000,19 @@ const s = StyleSheet.create({
   promoCard: { width: '100%', borderRadius: 18, overflow: 'hidden', backgroundColor: Colors.white, ...Shadow.lg, justifyContent: 'center' },
   promoImage: { width: '100%', minWidth: '100%', aspectRatio: 500 / 627, backgroundColor: '#D9ECFF' },
   promoCloseBtn: { position: 'absolute', top: 12, right: 12, width: 30, height: 30, borderRadius: 15, backgroundColor: 'rgba(26, 54, 93, 0.58)', alignItems: 'center', justifyContent: 'center' },
-  videoModalBackdrop: { flex: 1, backgroundColor: 'rgba(8, 17, 30, 0.72)', alignItems: 'center', justifyContent: 'center', padding: 24 },
-  videoModalCard: { width: '100%', maxWidth: 360, borderRadius: 24, backgroundColor: Colors.white, overflow: 'hidden' },
-  videoModalImageWrap: { aspectRatio: 16 / 9, backgroundColor: '#D9ECFF', position: 'relative' },
-  videoModalImage: { width: '100%', height: '100%' },
-  videoModalOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(8, 17, 30, 0.28)' },
-  videoModalPlay: { position: 'absolute', top: '50%', left: '50%', width: 60, height: 60, borderRadius: 30, marginLeft: -30, marginTop: -30, backgroundColor: 'rgba(255,255,255,0.18)', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.28)' },
-  videoModalBody: { padding: 18, gap: 10 },
-  videoModalTitle: { fontFamily: FontFamily.semiBold, fontSize: 18, color: Colors.greyText },
-  videoModalDesc: { fontFamily: FontFamily.regular, fontSize: 13, color: Colors.greyNormal, lineHeight: 20 },
-  videoModalMeta: { fontFamily: FontFamily.regular, fontSize: 11, color: '#7B8794' },
-  videoModalActions: { flexDirection: 'row', gap: 10, marginTop: 6 },
-  videoModalPrimaryBtn: { flex: 1, height: 44, borderRadius: 22, backgroundColor: Colors.primaryDark, alignItems: 'center', justifyContent: 'center' },
-  videoModalPrimaryTxt: { fontFamily: FontFamily.medium, fontSize: 13, color: Colors.white },
-  videoModalGhostBtn: { flex: 1, height: 44, borderRadius: 22, backgroundColor: '#EFF4FA', alignItems: 'center', justifyContent: 'center' },
-  videoModalGhostTxt: { fontFamily: FontFamily.medium, fontSize: 13, color: Colors.primaryDark },
+  videoModalBackdrop: { flex: 1, backgroundColor: 'rgba(10, 14, 20, 0.82)', justifyContent: 'center', paddingHorizontal: 10 },
+  videoModalCard: { width: '100%', alignSelf: 'center' },
+  videoModalHeader: { paddingHorizontal: 6, paddingBottom: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  videoModalHeaderTitle: { fontFamily: FontFamily.medium, fontSize: 16, color: Colors.white },
+  videoModalCloseBtn: { width: 34, height: 34, borderRadius: 17, backgroundColor: 'rgba(255,255,255,0.14)', alignItems: 'center', justifyContent: 'center' },
+  videoFrame: { width: '100%', aspectRatio: 16 / 9, backgroundColor: Colors.black, overflow: 'hidden', borderRadius: 4 },
+  videoPlayer: { width: '100%', height: '100%' },
+  videoFallbackBtn: { alignSelf: 'flex-end', marginTop: 10, flexDirection: 'row', alignItems: 'center', gap: 7, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999, backgroundColor: 'rgba(255,255,255,0.14)' },
+  videoFallbackTxt: { fontFamily: FontFamily.medium, fontSize: 12, color: Colors.white },
+  videoCaptionRow: { marginTop: 10, paddingHorizontal: 2, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
+  videoCaption: { flex: 1, fontFamily: FontFamily.regular, fontSize: 13, color: 'rgba(255,255,255,0.92)' },
+  videoCaptionMeta: { fontFamily: FontFamily.medium, fontSize: 12, color: 'rgba(255,255,255,0.72)' },
+  videoSafeSpace: { height: 8 },
   whySection: { marginTop: 28, paddingHorizontal: 16, gap: 10 },
   whyTitle: { fontFamily: FontFamily.semiBold, fontSize: 16, color: Colors.greyText },
   whyIntro: { fontFamily: FontFamily.regular, fontSize: 12, color: '#6F7782', lineHeight: 18, maxWidth: 320 },
