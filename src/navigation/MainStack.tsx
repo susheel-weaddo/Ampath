@@ -22,6 +22,7 @@ import GuideToAmpathScreen from '../screens/main/GuideToAmpathScreen';
 import AllBlogScreen from '../screens/main/AllBlogScreen';
 import BlogDetailScreen from '../screens/main/BlogDetailScreen';
 import SetReminderScreen from '../screens/main/SetReminderScreen';
+import FranchiseEnquiryScreen from '../screens/main/FranchiseEnquiryScreen';
 import AccountSecurityScreen from '../screens/main/AccountSecurityScreen';
 import ContactUsScreen from '../screens/main/ContactUsScreen';
 import TermsScreen from '../screens/main/TermsScreen';
@@ -58,6 +59,7 @@ export default function MainStack() {
         <Stack.Screen name="FamilyMembers" component={FamilyMembersScreen} />
         <Stack.Screen name="AddMember" component={AddMemberScreen} />
         <Stack.Screen name="SetReminder" component={SetReminderScreen} />
+        <Stack.Screen name="FranchiseEnquiry" component={FranchiseEnquiryScreen} />
         <Stack.Screen name="AccountSecurity" component={AccountSecurityScreen} />
         <Stack.Screen name="SavedAddresses" component={SavedAddressesScreen} />
         <Stack.Screen name="OrderHistory" component={OrderHistoryScreen} />

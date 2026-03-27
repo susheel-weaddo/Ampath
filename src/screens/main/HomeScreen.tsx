@@ -323,10 +323,12 @@ export default function HomeScreen({ navigation }: any) {
                 <View style={s.reminderImgWrap}>
                   <Image source={reminderAvtar} style={s.reminderImg} />
                 </View>
-              <LinearGradient colors={[Colors.primaryDark, Colors.primary]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={s.reminderBtn}>
-                <Ionicons name="notifications-outline" size={14} color={Colors.primaryDark} style={s.reminderBell} />
-                <Text style={s.reminderBtnTxt}>Set reminder</Text>
-              </LinearGradient>
+              <TouchableOpacity activeOpacity={0.85} onPress={() => navigation.navigate('FranchiseEnquiry')} style={{ flex: 1,height: 40}}>
+                <LinearGradient colors={[Colors.primaryDark, Colors.primary]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={s.reminderBtn}>
+                  <Ionicons name="notifications-outline" size={14} color={Colors.primaryDark} style={s.reminderBell} />
+                  <Text style={s.reminderBtnTxt}>Set reminder</Text>
+                </LinearGradient>
+              </TouchableOpacity>
             </View>
           </View>
         </View>
@@ -809,7 +811,7 @@ const s = StyleSheet.create({
   reminderText: { fontFamily: FontFamily.medium, fontSize: 14, color: Colors.primaryDark, width: 108, paddingBottom: 15, paddingTop: 4, lineHeight: 17 },
   reminderImgWrap: {flexShrink: 1, flexBasis: 'auto', aspectRatio: 84/87, height: "100%", },
   reminderImg: { width: "100%", height: "100%" },
-  reminderBtn: { flex: 1, height: 40, borderRadius: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, marginLeft: 14 },
+  reminderBtn: { height: "100%", borderRadius: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, marginLeft: 14 },
   reminderBell: { backgroundColor: Colors.white, borderRadius: 10, padding: 3 },
   reminderBtnTxt: { fontFamily: FontFamily.medium, fontSize: 12, color: Colors.white,},
   actionsWrap: { marginTop: 14, flexDirection: 'row', flexWrap: 'wrap', gap: 10, justifyContent: 'space-between' },

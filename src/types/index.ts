@@ -125,6 +125,7 @@ export type MainStackParams = {
   GetHelp: undefined;
   GuideToAmpath: undefined;
   SetReminder: undefined;
+  FranchiseEnquiry: undefined;
   AccountSecurity: undefined;
   ContactUs: undefined;
   AllBlog: undefined;
