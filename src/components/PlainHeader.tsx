@@ -16,7 +16,7 @@ export function PlainHeader({ title, showBack = true, onBack, rightElement }: Pl
       <View style={s.row}>
         {showBack ? (
           <TouchableOpacity onPress={onBack} style={s.backBtn} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-            <ChevronLeft width={24} height={24} color={Colors.greyText} />
+            <ChevronLeft width={24} height={24} color={Colors.primary} />
           </TouchableOpacity>
         ) : <View style={s.backBtn} />}
         <Text style={s.title}>{title}</Text>

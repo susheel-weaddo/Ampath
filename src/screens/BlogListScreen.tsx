@@ -17,6 +17,7 @@ import { DEFAULT_BLOG_CITY, getApiErrorMessage, getBlogs } from '../api/blogApi'
 import { formatDisplayDate } from '../utils/date';
 import type { Blog } from '../types/blog';
 import type { MainStackParams } from '../types';
+import { Platform, StatusBar as RNStatusBar } from 'react-native';
 
 type Props = NativeStackScreenProps<MainStackParams, 'AllBlog'>;
 
@@ -25,6 +26,8 @@ export default function BlogListScreen({ navigation }: Props) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [categories, setCategories] = useState<Array<{ id: string; label: string }>>([]);
 
   const loadBlogs = useCallback(async (options?: { silent?: boolean }) => {
     const silent = options?.silent ?? false;
@@ -38,13 +41,36 @@ export default function BlogListScreen({ navigation }: Props) {
     try {
       const response = await getBlogs(DEFAULT_BLOG_CITY);
       setBlogs(response);
+
+      // Extract unique categories from blogs
+      const uniqueCategories = new Set<string>();
+      response.forEach((blog) => {
+        if (blog.category) {
+          uniqueCategories.add(blog.category);
+        }
+      });
+
+      // Build categories array (without "All Blog")
+      const categoryList: Array<{ id: string; label: string }> = [];
+      uniqueCategories.forEach((cat) => {
+        categoryList.push({
+          id: cat.toLowerCase(),
+          label: cat,
+        });
+      });
+      setCategories(categoryList);
+
+      // Set first category as selected by default
+      if (categoryList.length > 0 && !selectedCategory) {
+        setSelectedCategory(categoryList[0].id);
+      }
     } catch (fetchError) {
       setError(getApiErrorMessage(fetchError));
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [selectedCategory]);
 
   useEffect(() => {
     void loadBlogs();
@@ -55,21 +81,41 @@ export default function BlogListScreen({ navigation }: Props) {
     void loadBlogs({ silent: true });
   }, [loadBlogs]);
 
+  const filteredBlogs = blogs.filter((blog) => {
+    if (!selectedCategory) return true;
+    return blog.category?.toLowerCase() === selectedCategory;
+  });
+
   return (
     <AppScreenWrapper>
       <View style={s.container}>
         <StatusBar style="dark" />
-        <PlainHeader title="Blogs" onBack={() => navigation.goBack()} />
+        <PlainHeader title="All Blog" onBack={() => navigation.goBack()} />
 
         <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={s.content}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primaryDark} />}
         >
-          <View style={s.intro}>
-            <Text style={s.introTitle}>Latest health reads</Text>
-            <Text style={s.introText}>Showing blogs for `{DEFAULT_BLOG_CITY}`. Replace this default city in [src/api/blogApi.ts].</Text>
-          </View>
+
+          {/* Category Filter */}
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={s.categoryContainer}
+            contentContainerStyle={s.categoryContent}
+          >
+            {categories.map((category) => (
+              <TouchableOpacity
+                key={category.id}
+                activeOpacity={0.7}
+                style={[s.categoryButton, selectedCategory === category.id && s.categoryButtonActive]}
+                onPress={() => setSelectedCategory(category.id)}
+              >
+                <Text style={[s.categoryText, selectedCategory === category.id && s.categoryTextActive]}>{category.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
 
           {loading ? (
             <View style={s.centerState}>
@@ -91,7 +137,7 @@ export default function BlogListScreen({ navigation }: Props) {
             </View>
           ) : (
             <View style={s.list}>
-              {blogs.map((blog) => (
+              {filteredBlogs.map((blog) => (
                 <TouchableOpacity
                   key={blog.id}
                   style={s.card}
@@ -120,11 +166,40 @@ export default function BlogListScreen({ navigation }: Props) {
 }
 
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.white },
+  container: { flex: 1, backgroundColor: Colors.white, paddingTop: Platform.OS === 'ios' ? 30 : (RNStatusBar.currentHeight || 44) + 12, },
   content: { paddingTop: 16, paddingBottom: 120 },
   intro: { marginHorizontal: containerSpace, marginBottom: 18, padding: 16, borderRadius: 18, backgroundColor: '#EEF5FD', gap: 6 },
-  introTitle: { fontFamily: FontFamily.semiBold, fontSize: 16, color: Colors.primaryDark },
+  introTitle: { fontFamily: FontFamily.semiBold, fontSize: 20, color: Colors.greyText },
   introText: { fontFamily: FontFamily.regular, fontSize: 12, color: Colors.greyNormal, lineHeight: 18 },
+  categoryContainer: {
+    marginLeft: containerSpace,
+    marginBottom: 20,
+  },
+  categoryContent: {
+    paddingRight: 20,
+  },
+  categoryButton: {
+    paddingHorizontal: 24,
+    paddingVertical: 8,
+    borderRadius: 25,
+    backgroundColor: '#F5F5F5',
+    marginRight: 12,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+  },
+  categoryButtonActive: {
+    backgroundColor: Colors.primaryDark,
+    borderColor: Colors.primaryDark,
+  },
+  categoryText: {
+    fontSize: 12,
+    color: '#4A4A4A',
+    fontFamily: FontFamily.regular,
+  },
+  categoryTextActive: {
+    color: Colors.white,
+    fontFamily: FontFamily.medium,
+  },
   centerState: { marginHorizontal: containerSpace, marginTop: 20, borderRadius: 18, padding: 24, backgroundColor: '#F7FAFD', alignItems: 'center', gap: 10 },
   stateTitle: { fontFamily: FontFamily.semiBold, fontSize: 16, color: Colors.greyText, textAlign: 'center' },
   stateText: { fontFamily: FontFamily.regular, fontSize: 13, color: Colors.greyNormal, lineHeight: 19, textAlign: 'center' },

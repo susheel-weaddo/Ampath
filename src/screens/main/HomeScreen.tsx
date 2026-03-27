@@ -983,7 +983,7 @@ const s = StyleSheet.create({
   blogCard: { width: 253, borderRadius: 10, backgroundColor: '#E9EFF6', padding: 11, gap: 10 },
   blogStateCard: { minHeight: 160, justifyContent: 'center' },
   blogImgWrap: { width: "100%", aspectRatio: 233/93, borderRadius: 10, backgroundColor: '#D9ECFF' },
-  blogImg: { height: 93, borderRadius: 10, backgroundColor: '#D9ECFF' },
+  blogImg: { height: 95, borderRadius: 10, backgroundColor: '#D9ECFF' },
   blogTitle: { fontFamily: FontFamily.semiBold, fontSize: 14, color: Colors.black },
   blogDesc: { fontFamily: FontFamily.regular, fontSize: 10, color: '#282828' },
   blogBtn: { alignSelf: 'flex-start', borderWidth: 0.5, borderColor: Colors.primary, borderRadius: 20, height: 28, paddingHorizontal: 18, justifyContent: 'center', backgroundColor: 'transparent' },
